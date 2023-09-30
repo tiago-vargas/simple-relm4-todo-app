@@ -4,7 +4,10 @@ use gtk::prelude::*;
 pub(crate) struct ContentModel;
 
 #[derive(Debug)]
-pub(crate) enum ContentInput {}
+pub(crate) enum ContentInput {
+    AddTask(String),
+    ClearBuffer(gtk::EntryBuffer),
+}
 
 #[relm4::component(pub(crate))]
 impl SimpleComponent for ContentModel {
@@ -14,18 +17,25 @@ impl SimpleComponent for ContentModel {
     type Output = ();
 
     view! {
-        gtk::Label {
-            set_label: "Hello, World!",
-            set_margin_all: 4,
-            set_css_classes: &["title-1"],
-            set_vexpand: true,
+        gtk::Box {
+            set_orientation: gtk::Orientation::Vertical,
+            set_margin_all: 12,
+
+            gtk::Entry {
+                set_placeholder_text: Some("Enter a Task..."),
+
+                connect_activate[sender] => move |entry| {
+                    sender.input(Self::Input::AddTask(entry.text().to_string()));
+                    sender.input(Self::Input::ClearBuffer(entry.buffer()));
+                },
+            },
         },
     }
 
     fn init(
         _init: Self::Init,
         root: &Self::Root,
-        _sender: ComponentSender<Self>,
+        sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let model = ContentModel;
 
@@ -35,6 +45,10 @@ impl SimpleComponent for ContentModel {
     }
 
     fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
-        match message {}
+        match message {
+            Self::Input::AddTask(text) if text.is_empty() => (),
+            Self::Input::AddTask(text) => println!("{text:?}"),  // TODO: Implement actual action
+            Self::Input::ClearBuffer(buffer) => buffer.set_text(""),
+        }
     }
 }
