@@ -21,8 +21,8 @@ impl SimpleComponent for AppModel {
     view! {
         adw::ApplicationWindow {
             set_title: Some("Template"),
-            set_default_width: 600,
-            set_default_height: 300,
+            set_default_width: 400,
+            set_default_height: 500,
 
             gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
