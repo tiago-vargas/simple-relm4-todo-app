@@ -1,7 +1,12 @@
-use relm4::prelude::*;
 use gtk::prelude::*;
+use relm4::factory::FactoryVecDeque;
+use relm4::prelude::*;
 
-pub(crate) struct ContentModel;
+mod task;
+
+pub(crate) struct ContentModel {
+    tasks: FactoryVecDeque<task::Task>,
+}
 
 #[derive(Debug)]
 pub(crate) enum ContentInput {
@@ -20,6 +25,7 @@ impl SimpleComponent for ContentModel {
         gtk::Box {
             set_orientation: gtk::Orientation::Vertical,
             set_margin_all: 12,
+            set_spacing: 12,
 
             gtk::Entry {
                 set_placeholder_text: Some("Enter a Task..."),
@@ -29,6 +35,14 @@ impl SimpleComponent for ContentModel {
                     sender.input(Self::Input::ClearBuffer(entry.buffer()));
                 },
             },
+
+            #[local_ref]
+            task_list_box -> gtk::ListBox {
+                set_css_classes: &["boxed-list"],
+
+                #[watch]
+                set_visible: !model.tasks.is_empty(),
+            },
         },
     }
 
@@ -37,8 +51,10 @@ impl SimpleComponent for ContentModel {
         root: &Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let model = ContentModel;
+        let tasks = FactoryVecDeque::new(gtk::ListBox::default(), sender.input_sender());
+        let model = ContentModel { tasks };
 
+        let task_list_box = model.tasks.widget();
         let widgets = view_output!();
 
         ComponentParts { model, widgets }
@@ -47,7 +63,9 @@ impl SimpleComponent for ContentModel {
     fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
         match message {
             Self::Input::AddTask(text) if text.is_empty() => (),
-            Self::Input::AddTask(text) => println!("{text:?}"),  // TODO: Implement actual action
+            Self::Input::AddTask(text) => {
+                self.tasks.guard().push_front(text);
+            }
             Self::Input::ClearBuffer(buffer) => buffer.set_text(""),
         }
     }
