@@ -22,27 +22,31 @@ impl SimpleComponent for ContentModel {
     type Output = ();
 
     view! {
-        gtk::Box {
-            set_orientation: gtk::Orientation::Vertical,
-            set_margin_all: 12,
-            set_spacing: 12,
+        gtk::ScrolledWindow {
+            set_vexpand: true,
 
-            gtk::Entry {
-                set_placeholder_text: Some("Enter a Task..."),
+            gtk::Box {
+                set_orientation: gtk::Orientation::Vertical,
+                set_margin_all: 12,
+                set_spacing: 12,
 
-                connect_activate[sender] => move |entry| {
-                    sender.input(Self::Input::AddTask(entry.text().to_string()));
-                    sender.input(Self::Input::ClearBuffer(entry.buffer()));
+                gtk::Entry {
+                    set_placeholder_text: Some("Enter a Task..."),
+
+                    connect_activate[sender] => move |entry| {
+                        sender.input(Self::Input::AddTask(entry.text().to_string()));
+                        sender.input(Self::Input::ClearBuffer(entry.buffer()));
+                    },
                 },
-            },
 
-            #[local_ref]
-            task_list_box -> gtk::ListBox {
-                set_css_classes: &["boxed-list"],
+                #[local_ref]
+                task_list_box -> gtk::ListBox {
+                    set_css_classes: &["boxed-list"],
 
-                #[watch]
-                set_visible: !model.tasks.is_empty(),
-            },
+                    #[watch]
+                    set_visible: !model.tasks.is_empty(),
+                },
+            }
         },
     }
 
