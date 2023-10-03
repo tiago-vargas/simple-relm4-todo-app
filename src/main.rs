@@ -1,3 +1,8 @@
+use relm4::prelude::*;
+
+mod app;
+
 fn main() {
-    println!("Hello, world!");
+    let app = RelmApp::new("com.github.tiago-vargas.simple-relm4-todo");
+    app.run::<app::AppModel>(());
 }
