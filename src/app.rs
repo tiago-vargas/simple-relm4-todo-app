@@ -1,5 +1,4 @@
 use gtk::prelude::*;
-use relm4::gtk;
 use relm4::prelude::*;
 
 mod content;
