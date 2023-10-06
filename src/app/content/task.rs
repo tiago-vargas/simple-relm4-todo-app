@@ -3,11 +3,18 @@ use super::ContentInput;
 use gtk::prelude::*;
 use relm4::prelude::*;
 
-pub(crate) struct TaskRow(String);
+pub(crate) struct TaskRow {
+    pub(crate) task: Task,
+}
+
+#[derive(Debug)]
+pub(crate) struct Task {
+    pub(crate) description: String,
+}
 
 #[relm4::factory(pub(crate))]
 impl FactoryComponent for TaskRow {
-    type Init = String;
+    type Init = Task;
 
     type Input = ();
     type Output = ();
@@ -18,7 +25,7 @@ impl FactoryComponent for TaskRow {
 
     view! {
         gtk::CheckButton {
-            set_label: Some(self.0.as_str()),
+            set_label: Some(self.task.description.as_str()),
             set_halign: gtk::Align::Start,
             set_margin_all: 8,
         }
@@ -29,11 +36,11 @@ impl FactoryComponent for TaskRow {
     }
 
     fn init_model(
-        description: Self::Init,
+        task: Self::Init,
         _index: &DynamicIndex,
         _sender: FactorySender<Self>,
     ) -> Self {
-        Self(description)
+        Self { task }
     }
 
     fn update(&mut self, _input: Self::Input, _sender: FactorySender<Self>) {}
