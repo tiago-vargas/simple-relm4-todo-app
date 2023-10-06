@@ -15,6 +15,7 @@ pub(crate) struct AppModel {
 #[derive(Debug)]
 pub(crate) enum AppInput {
     SaveTasks,
+    LoadTasks,
 }
 
 #[relm4::component(pub(crate))]
@@ -36,6 +37,10 @@ impl SimpleComponent for AppModel {
                 adw::HeaderBar,
 
                 model.content.widget(),
+            },
+
+            connect_show[sender] => move |_| {
+                sender.input(AppInput::LoadTasks);
             },
 
             connect_close_request[sender] => move |_| {
@@ -81,6 +86,19 @@ impl SimpleComponent for AppModel {
 
                 serde_json::to_writer_pretty(file, &tasks)
                     .expect("Could not write data to JSON file");
+            }
+            Self::Input::LoadTasks => {
+                let mut path = gtk::glib::user_data_dir();
+                path.push(APP_ID);
+                path.push(FILE_NAME);
+
+                if let Ok(file) = fs::File::open(path) {
+                    let tasks: Vec<content::task::Task> = serde_json::from_reader(file)
+                        .expect("Could not read data from JSON file.");
+
+                    self.content.sender().send(content::ContentInput::RestoreTasks(tasks))
+                        .expect("Could not send message to child component.");
+                }
             }
         }
     }

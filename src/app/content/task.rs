@@ -3,13 +3,13 @@ use super::ContentInput;
 use gtk::prelude::*;
 use relm4::prelude::*;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 pub(crate) struct TaskRow {
     pub(crate) task: Task,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub(crate) struct Task {
     pub(crate) description: String,
     pub(crate) completed: bool,
