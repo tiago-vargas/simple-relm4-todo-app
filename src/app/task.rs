@@ -1,4 +1,4 @@
-use super::ContentInput;
+use super::content::ContentInput;
 
 use gtk::prelude::*;
 use relm4::prelude::*;

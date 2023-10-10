@@ -2,7 +2,7 @@ use gtk::prelude::*;
 use relm4::factory::FactoryVecDeque;
 use relm4::prelude::*;
 
-pub(crate) mod task;
+use crate::app::task;
 
 pub(crate) struct ContentModel {
     pub(crate) tasks: FactoryVecDeque<task::TaskRow>,

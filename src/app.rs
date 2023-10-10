@@ -4,6 +4,7 @@ use relm4::prelude::*;
 use std::fs;
 
 mod content;
+mod task;
 
 pub(crate) const APP_ID: &str = "com.github.tiago-vargas.simple-relm4-todo";
 pub(crate) const FILE_NAME: &str = "data.json";
@@ -70,7 +71,7 @@ impl SimpleComponent for AppModel {
         match message {
             Self::Input::SaveTasks => {
                 let content_model = self.content.model();
-                let tasks: Vec<&content::task::Task> = content_model.tasks
+                let tasks: Vec<&task::Task> = content_model.tasks
                     .iter()
                     .map(|row| &row.task)
                     .collect();
@@ -93,7 +94,7 @@ impl SimpleComponent for AppModel {
                 path.push(FILE_NAME);
 
                 if let Ok(file) = fs::File::open(path) {
-                    let tasks: Vec<content::task::Task> = serde_json::from_reader(file)
+                    let tasks: Vec<task::Task> = serde_json::from_reader(file)
                         .expect("Could not read data from JSON file.");
 
                     self.content.sender().send(content::ContentInput::RestoreTasks(tasks))
