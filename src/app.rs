@@ -3,6 +3,8 @@ use relm4::prelude::*;
 
 mod content;
 
+pub(crate) const APP_ID: &str = "com.github.tiago-vargas.simple-relm4-todo";
+
 pub(crate) struct AppModel {
     content: Controller<content::ContentModel>,
 }
