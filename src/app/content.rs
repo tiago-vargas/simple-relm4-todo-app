@@ -5,7 +5,7 @@ use relm4::prelude::*;
 mod task;
 
 pub(crate) struct ContentModel {
-    tasks: FactoryVecDeque<task::Task>,
+    tasks: FactoryVecDeque<task::TaskRow>,
 }
 
 #[derive(Debug)]

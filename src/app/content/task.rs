@@ -3,10 +3,10 @@ use super::ContentInput;
 use gtk::prelude::*;
 use relm4::prelude::*;
 
-pub(crate) struct Task(String);
+pub(crate) struct TaskRow(String);
 
 #[relm4::factory(pub(crate))]
-impl FactoryComponent for Task {
+impl FactoryComponent for TaskRow {
     type Init = String;
 
     type Input = ();
