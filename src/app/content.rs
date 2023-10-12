@@ -2,10 +2,10 @@ use gtk::prelude::*;
 use relm4::factory::FactoryVecDeque;
 use relm4::prelude::*;
 
-mod task;
+pub(crate) mod task;
 
 pub(crate) struct ContentModel {
-    tasks: FactoryVecDeque<task::TaskRow>,
+    pub(crate) tasks: FactoryVecDeque<task::TaskRow>,
 }
 
 #[derive(Debug)]
@@ -36,6 +36,7 @@ impl SimpleComponent for ContentModel {
                     connect_activate[sender] => move |entry| {
                         let task = task::Task {
                             description: entry.text().to_string(),
+                            completed: false,
                         };
                         sender.input(Self::Input::AddTask(task));
                         sender.input(Self::Input::ClearBuffer(entry.buffer()));
