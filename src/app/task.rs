@@ -32,14 +32,30 @@ impl FactoryComponent for TaskRow {
     type ParentWidget = gtk::ListBox;
 
     view! {
-        gtk::CheckButton {
-            set_label: Some(self.task.description.as_str()),
-            set_halign: gtk::Align::Start,
-            set_active: self.task.completed,
-            set_margin_all: 8,
+        gtk::Box {
+            set_orientation: gtk::Orientation::Horizontal,
+            set_spacing: 8,
 
-            connect_toggled[sender] => move |_| {
-                sender.input(Self::Input::Toggle)
+            gtk::CheckButton {
+                set_label: Some(self.task.description.as_str()),
+                set_halign: gtk::Align::Start,
+                set_active: self.task.completed,
+                set_hexpand: true,
+                set_margin_all: 8,
+
+                connect_toggled[sender] => move |_| {
+                    sender.input(Self::Input::Toggle)
+                },
+            },
+
+            gtk::Button {
+                set_icon_name: "edit-delete-symbolic",
+                set_css_classes: &["destructive-action"],
+                set_margin_all: 8,
+
+                connect_clicked[sender] => move |_| {
+                    // TODO: Add action to remove this task
+                },
             },
         }
     }
