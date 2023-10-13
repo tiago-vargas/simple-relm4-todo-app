@@ -20,12 +20,17 @@ pub(crate) enum TaskRowInput {
     Toggle,
 }
 
+#[derive(Debug)]
+pub(crate) enum TaskRowOutput {
+    Remove(DynamicIndex),
+}
+
 #[relm4::factory(pub(crate))]
 impl FactoryComponent for TaskRow {
     type Init = Task;
 
     type Input = TaskRowInput;
-    type Output = ();
+    type Output = TaskRowOutput;
 
     type CommandOutput = ();
     type ParentInput = ContentInput;
@@ -53,15 +58,17 @@ impl FactoryComponent for TaskRow {
                 set_css_classes: &["destructive-action"],
                 set_margin_all: 8,
 
-                connect_clicked[sender] => move |_| {
-                    // TODO: Add action to remove this task
+                connect_clicked[sender, index] => move |_| {
+                    sender.output(Self::Output::Remove(index.clone()));
                 },
             },
         }
     }
 
-    fn forward_to_parent(_output: Self::Output) -> Option<Self::ParentInput> {
-        None
+    fn forward_to_parent(output: Self::Output) -> Option<Self::ParentInput> {
+        Some(match output {
+            Self::Output::Remove(index) => ContentInput::RemoveTask(index),
+        })
     }
 
     fn init_model(
