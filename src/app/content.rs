@@ -2,15 +2,16 @@ use gtk::prelude::*;
 use relm4::factory::FactoryVecDeque;
 use relm4::prelude::*;
 
-mod task;
+use crate::app::task;
 
 pub(crate) struct ContentModel {
-    tasks: FactoryVecDeque<task::Task>,
+    pub(crate) tasks: FactoryVecDeque<task::TaskRow>,
 }
 
 #[derive(Debug)]
 pub(crate) enum ContentInput {
-    AddTask(String),
+    AddTask(task::Task),
+    RestoreTasks(Vec<task::Task>),
     ClearBuffer(gtk::EntryBuffer),
 }
 
@@ -34,7 +35,11 @@ impl SimpleComponent for ContentModel {
                     set_placeholder_text: Some("Enter a Task..."),
 
                     connect_activate[sender] => move |entry| {
-                        sender.input(Self::Input::AddTask(entry.text().to_string()));
+                        let task = task::Task {
+                            description: entry.text().to_string(),
+                            completed: false,
+                        };
+                        sender.input(Self::Input::AddTask(task));
                         sender.input(Self::Input::ClearBuffer(entry.buffer()));
                     },
                 },
@@ -66,9 +71,14 @@ impl SimpleComponent for ContentModel {
 
     fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
         match message {
-            Self::Input::AddTask(text) if text.is_empty() => (),
-            Self::Input::AddTask(text) => {
-                self.tasks.guard().push_front(text);
+            Self::Input::AddTask(t) if t.description.is_empty() => (),
+            Self::Input::AddTask(t) => {
+                self.tasks.guard().push_front(t);
+            }
+            Self::Input::RestoreTasks(tasks) => {
+                for t in tasks {
+                    self.tasks.guard().push_back(t);
+                }
             }
             Self::Input::ClearBuffer(buffer) => buffer.set_text(""),
         }
