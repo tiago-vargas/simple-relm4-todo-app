@@ -11,6 +11,7 @@ pub(crate) struct ContentModel {
 #[derive(Debug)]
 pub(crate) enum ContentInput {
     AddTask(task::Task),
+    RemoveTask(DynamicIndex),
     RestoreTasks(Vec<task::Task>),
     ClearBuffer(gtk::EntryBuffer),
 }
@@ -73,11 +74,14 @@ impl SimpleComponent for ContentModel {
         match message {
             Self::Input::AddTask(t) if t.description.is_empty() => (),
             Self::Input::AddTask(t) => {
-                self.tasks.guard().push_front(t);
+                _ = self.tasks.guard().push_front(t);
+            }
+            Self::Input::RemoveTask(index) => {
+                _ = self.tasks.guard().remove(index.current_index());
             }
             Self::Input::RestoreTasks(tasks) => {
                 for t in tasks {
-                    self.tasks.guard().push_back(t);
+                    _ = self.tasks.guard().push_back(t);
                 }
             }
             Self::Input::ClearBuffer(buffer) => buffer.set_text(""),
