@@ -17,6 +17,7 @@ pub(crate) struct AppModel {
 pub(crate) enum AppInput {
     SaveTasks,
     LoadTasks,
+    SaveWindowSize(i32, i32),
 }
 
 #[relm4::component(pub(crate))]
@@ -44,8 +45,11 @@ impl SimpleComponent for AppModel {
                 sender.input(AppInput::LoadTasks);
             },
 
-            connect_close_request[sender] => move |_| {
+            connect_close_request[sender, window] => move |_| {
                 sender.input(AppInput::SaveTasks);
+                let width = window.width();
+                let height = window.height();
+                sender.input(AppInput::SaveWindowSize(width, height));
                 gtk::Inhibit(false)
             },
         }
@@ -102,6 +106,13 @@ impl SimpleComponent for AppModel {
                     self.content.sender().send(content::ContentInput::RestoreTasks(tasks))
                         .expect("Could not send message to child component.");
                 }
+            }
+            Self::Input::SaveWindowSize(width, height) => {
+                let settings = gtk::gio::Settings::new(APP_ID);
+                // let window = self.root();
+                // let (width, height) = window.default_size();
+                let _ = settings.set_int("window-width", width);
+                let _ = settings.set_int("window-height", height);
             }
         }
     }
