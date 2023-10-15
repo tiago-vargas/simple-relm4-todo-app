@@ -17,6 +17,21 @@ pub(crate) struct AppModel {
 pub(crate) enum AppInput {
     SaveTasks,
     LoadTasks,
+    SaveWindowSize(i32, i32),
+}
+
+enum Settings {
+    WindowWidth,
+    WindowHeight,
+}
+
+impl Settings {
+    fn as_str(&self) -> &str {
+        match self {
+            Self::WindowWidth => "window-width",
+            Self::WindowHeight => "window-height",
+        }
+    }
 }
 
 #[relm4::component(pub(crate))]
@@ -29,8 +44,8 @@ impl SimpleComponent for AppModel {
     view! {
         adw::ApplicationWindow {
             set_title: Some("To-Do"),
-            set_default_width: 400,
-            set_default_height: 500,
+            set_default_width: settings.int(Settings::WindowWidth.as_str()),
+            set_default_height: settings.int(Settings::WindowHeight.as_str()),
 
             gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
@@ -44,8 +59,11 @@ impl SimpleComponent for AppModel {
                 sender.input(AppInput::LoadTasks);
             },
 
-            connect_close_request[sender] => move |_| {
+            connect_close_request[sender, window] => move |_| {
                 sender.input(AppInput::SaveTasks);
+                let width = window.width();
+                let height = window.height();
+                sender.input(Self::Input::SaveWindowSize(width, height));
                 gtk::Inhibit(false)
             },
         }
@@ -57,6 +75,8 @@ impl SimpleComponent for AppModel {
         window: &Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
+        let settings = gtk::gio::Settings::new(APP_ID);
+
         let content = content::ContentModel::builder()
             .launch(())
             .detach();
@@ -100,6 +120,11 @@ impl SimpleComponent for AppModel {
                     self.content.sender().send(content::ContentInput::RestoreTasks(tasks))
                         .expect("Could not send message to child component.");
                 }
+            }
+            Self::Input::SaveWindowSize(width, height) => {
+                let settings = gtk::gio::Settings::new(APP_ID);
+                _ = settings.set_int(Settings::WindowWidth.as_str(), width);
+                _ = settings.set_int(Settings::WindowHeight.as_str(), height);
             }
         }
     }
