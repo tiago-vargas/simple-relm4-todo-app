@@ -29,8 +29,8 @@ impl SimpleComponent for AppModel {
     view! {
         adw::ApplicationWindow {
             set_title: Some("To-Do"),
-            set_default_width: 400,
-            set_default_height: 500,
+            set_default_width: settings.int("window-width"),
+            set_default_height: settings.int("window-height"),
 
             gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
@@ -57,6 +57,8 @@ impl SimpleComponent for AppModel {
         window: &Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
+        let settings = gtk::gio::Settings::new(APP_ID);
+
         let content = content::ContentModel::builder()
             .launch(())
             .detach();
