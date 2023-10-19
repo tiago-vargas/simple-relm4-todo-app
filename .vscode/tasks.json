@@ -11,11 +11,11 @@
 			"label": "rust: cargo build",
 			"presentation": {
 				"echo": true,
-				"reveal": "always",
+				"reveal": "silent",
 				"focus": false,
-				"panel": "shared",
+				"panel": "dedicated",
 				"showReuseMessage": true,
-				"clear": true,
+				"clear": true
 			}
 		}
 	]
