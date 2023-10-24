@@ -6,7 +6,7 @@ use std::fs;
 mod content;
 mod task;
 
-pub(crate) const APP_ID: &str = "com.github.tiago-vargas.simple-relm4-todo";
+pub(crate) const APP_ID: &str = "com.github.tiago_vargas.simple_relm4_todo";
 pub(crate) const FILE_NAME: &str = "data.json";
 
 pub(crate) struct AppModel {
