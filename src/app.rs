@@ -65,11 +65,11 @@ impl SimpleComponent for AppModel {
             },
 
             connect_show[sender] => move |_| {
-                sender.input(AppInput::LoadTasks);
+                sender.input(Self::Input::LoadTasks);
             },
 
             connect_close_request[sender, window] => move |_| {
-                sender.input(AppInput::SaveTasks);
+                sender.input(Self::Input::SaveTasks);
                 if window.is_maximized() {
                     sender.input(Self::Input::SaveWindowSize(WindowSize::Maximized));
                 } else {
