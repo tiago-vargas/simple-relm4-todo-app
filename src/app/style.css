@@ -1,0 +1,13 @@
+.task-row {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.task-row .title {
+    display: none;
+}
+
+.task-row .subtitle {
+    margin-top: 80;
+    margin-bottom: 0;
+}

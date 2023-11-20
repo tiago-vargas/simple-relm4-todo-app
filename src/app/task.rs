@@ -53,8 +53,10 @@ impl FactoryComponent for TaskRow {
     }
 
     view! {
-        adw::ActionRow {
-            set_title: self.task.description.as_str(),
+        adw::EntryRow {
+            set_text: self.task.description.as_str(),
+            set_selectable: false,
+            add_css_class: "task-row",
 
             add_prefix = &gtk::CheckButton {
                 set_active: self.task.completed,
@@ -72,6 +74,13 @@ impl FactoryComponent for TaskRow {
 
                 set_menu_model: Some(&row_menu),
             },
+
+            connect_show => move |a| {
+                let css_provider = gtk::CssProvider::new();
+                css_provider.load_from_path("style.css");
+                let style_context = a.style_context();
+                style_context.add_provider(&css_provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+            }
         },
     }
 
