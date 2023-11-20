@@ -1,6 +1,6 @@
 use super::content::ContentInput;
 
-use gtk::prelude::*;
+use adw::prelude::*;
 use relm4::{prelude::*, factory::FactoryView};
 
 use serde::{Deserialize, Serialize};
@@ -53,16 +53,11 @@ impl FactoryComponent for TaskRow {
     }
 
     view! {
-        gtk::Box {
-            set_orientation: gtk::Orientation::Horizontal,
-            set_spacing: 8,
+        adw::ActionRow {
+            set_title: self.task.description.as_str(),
 
-            gtk::CheckButton {
-                set_label: Some(self.task.description.as_str()),
-                set_halign: gtk::Align::Start,
+            add_prefix = &gtk::CheckButton {
                 set_active: self.task.completed,
-                set_hexpand: true,
-                set_margin_all: 8,
 
                 connect_toggled[sender] => move |_| {
                     sender.input(Self::Input::Toggle)
@@ -70,14 +65,14 @@ impl FactoryComponent for TaskRow {
             },
 
             #[name = "menu"]
-            gtk::MenuButton {
+            add_suffix = &gtk::MenuButton {
                 set_icon_name: "view-more-symbolic",
-                set_margin_all: 8,
+                set_valign: gtk::Align::Center,
                 set_css_classes: &["flat"],
 
                 set_menu_model: Some(&row_menu),
             },
-        }
+        },
     }
 
     fn forward_to_parent(output: Self::Output) -> Option<Self::ParentInput> {
