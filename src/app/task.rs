@@ -13,6 +13,7 @@ pub(crate) struct TaskRow {
 pub(crate) struct Task {
     pub(crate) description: String,
     pub(crate) completed: bool,
+    date: String,
 }
 
 #[derive(Debug)]
@@ -37,8 +38,9 @@ impl FactoryComponent for TaskRow {
     type ParentWidget = gtk::ListBox;
 
     view! {
-        adw::ActionRow {
-            set_title: self.task.description.as_str(),
+        adw::EntryRow {
+            set_title: self.task.date.as_str(),
+            set_text: self.task.description.as_str(),
 
             add_prefix = &gtk::CheckButton {
                 set_active: self.task.completed,
@@ -79,6 +81,16 @@ impl FactoryComponent for TaskRow {
             Self::Input::Toggle => {
                 self.task.completed = !self.task.completed;
             }
+        }
+    }
+}
+
+impl Task {
+    pub(crate) fn new(description: String) -> Self {
+        Self {
+            description,
+            completed: false,
+            date: chrono::Local::now().format("%Y-%m-%d").to_string(),
         }
     }
 }

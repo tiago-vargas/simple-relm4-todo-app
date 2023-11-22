@@ -36,10 +36,7 @@ impl SimpleComponent for ContentModel {
                     set_placeholder_text: Some("Enter a Task..."),
 
                     connect_activate[sender] => move |entry| {
-                        let task = task::Task {
-                            description: entry.text().to_string(),
-                            completed: false,
-                        };
+                        let task = task::Task::new(entry.buffer().text().to_string());
                         sender.input(Self::Input::AddTask(task));
                         sender.input(Self::Input::ClearBuffer(entry.buffer()));
                     },
