@@ -20,7 +20,6 @@ pub(crate) struct AppModel {
 pub(crate) enum AppInput {
     SaveTasks,
     LoadTasks,
-    SaveWindowSize(settings::WindowSize),
 }
 
 
@@ -32,7 +31,7 @@ impl SimpleComponent for AppModel {
     type Output = ();
 
     view! {
-        adw::ApplicationWindow {
+        main_window = adw::ApplicationWindow {
             set_title: Some("To-Do"),
             set_default_width: settings.int(Settings::WindowWidth.as_str()),
             set_default_height: settings.int(Settings::WindowHeight.as_str()),
@@ -50,15 +49,8 @@ impl SimpleComponent for AppModel {
                 sender.input(Self::Input::LoadTasks);
             },
 
-            connect_close_request[sender, window] => move |_| {
+            connect_close_request[sender] => move |_| {
                 sender.input(Self::Input::SaveTasks);
-                if window.is_maximized() {
-                    sender.input(Self::Input::SaveWindowSize(settings::WindowSize::Maximized));
-                } else {
-                    let width = window.width();
-                    let height = window.height();
-                    sender.input(Self::Input::SaveWindowSize(settings::WindowSize::Size(width, height)));
-                }
                 gtk::Inhibit(false)
             },
         }
@@ -116,16 +108,25 @@ impl SimpleComponent for AppModel {
                         .expect("Could not send message to child component.");
                 }
             }
-            Self::Input::SaveWindowSize(settings::WindowSize::Maximized) => {
-                let settings = gtk::gio::Settings::new(APP_ID);
-                _ = settings.set_boolean("window-is-maximized", true);
-            }
-            Self::Input::SaveWindowSize(settings::WindowSize::Size(width, height)) => {
-                let settings = gtk::gio::Settings::new(APP_ID);
-                _ = settings.set_int(settings::Settings::WindowWidth.as_str(), width);
-                _ = settings.set_int(settings::Settings::WindowHeight.as_str(), height);
-                _ = settings.set_boolean(settings::Settings::WindowIsMaximized.as_str(), false);
-            }
         }
+    }
+
+    fn shutdown(&mut self, widgets: &mut Self::Widgets, _output: relm4::Sender<Self::Output>) {
+        Self::save_window_state(&widgets);
+    }
+}
+
+impl AppModel {
+    fn save_window_state(widgets: &<Self as SimpleComponent>::Widgets) {
+        let settings = gtk::gio::Settings::new(APP_ID);
+
+        let (width, height) = widgets.main_window.default_size();
+        let _ = settings.set_int(settings::Settings::WindowWidth.as_str(), width);
+        let _ = settings.set_int(settings::Settings::WindowHeight.as_str(), height);
+
+        let _ = settings.set_boolean(
+            settings::Settings::WindowIsMaximized.as_str(),
+            widgets.main_window.is_maximized(),
+        );
     }
 }
