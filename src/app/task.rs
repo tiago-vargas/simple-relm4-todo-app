@@ -57,6 +57,12 @@ impl FactoryComponent for TaskRow {
             set_orientation: gtk::Orientation::Horizontal,
             set_spacing: 8,
 
+            gtk::Button {
+                set_icon_name: "drag-handle-symbolic",
+                set_margin_all: 8,
+                set_css_classes: &["flat"],
+            },
+
             gtk::CheckButton {
                 set_label: Some(self.task.description.as_str()),
                 set_halign: gtk::Align::Start,
