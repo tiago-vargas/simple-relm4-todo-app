@@ -1,7 +1,7 @@
 use super::content::ContentInput;
 
 use gtk::prelude::*;
-use relm4::prelude::*;
+use relm4::{prelude::*, factory::FactoryView};
 
 use serde::{Deserialize, Serialize};
 
@@ -36,8 +36,14 @@ impl FactoryComponent for TaskRow {
     type ParentInput = ContentInput;
     type ParentWidget = gtk::ListBox;
 
+    menu! {
+        row_menu: {
+            "Remove" => actions::RemoveTask,
+        }
+    }
+
     view! {
-        gtk::Box {
+        row = gtk::Box {
             set_orientation: gtk::Orientation::Horizontal,
             set_spacing: 8,
 
@@ -53,14 +59,13 @@ impl FactoryComponent for TaskRow {
                 },
             },
 
-            gtk::Button {
-                set_icon_name: "edit-delete-symbolic",
-                set_css_classes: &["destructive-action"],
+            gtk::MenuButton {
+                // set_direction: gtk::ArrowType::Down,
+                set_icon_name: "view-more-symbolic",
                 set_margin_all: 8,
+                set_css_classes: &["flat"],
 
-                connect_clicked[sender, index] => move |_| {
-                    sender.output(Self::Output::Remove(index.clone()));
-                },
+                set_menu_model: Some(&row_menu),
             },
         }
     }
@@ -79,11 +84,57 @@ impl FactoryComponent for TaskRow {
         Self { task }
     }
 
+    fn init_widgets(
+        &mut self,
+        index: &Self::Index,
+        root: &Self::Root,
+        _returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
+        sender: FactorySender<Self>,
+    ) -> Self::Widgets {
+        let widgets = view_output!();
+
+        Self::create_actions(index, &widgets, &sender);
+
+        widgets
+    }
+
     fn update(&mut self, input: Self::Input, _sender: FactorySender<Self>) {
         match input {
             Self::Input::Toggle => {
                 self.task.completed = !self.task.completed;
             }
+        }
+    }
+}
+
+mod actions {
+    // use gtk::prelude::*;
+    use relm4::{prelude::*, actions::{RelmAction, RelmActionGroup}};
+
+    use super::TaskRow;
+
+    relm4::new_action_group!(pub(crate) RowActions, "row");
+
+    relm4::new_stateless_action!(pub(crate) RemoveTask, RowActions, "remove");
+
+    impl TaskRow {
+        pub(crate) fn create_actions(
+            index: &DynamicIndex,
+            widgets: &<Self as FactoryComponent>::Widgets,
+            sender: &FactorySender<Self>,
+        ) {
+            let mut row_actions = RelmActionGroup::<RowActions>::new();
+
+            let remove_row = {
+                let sender = sender.clone();
+                let index = index.clone();
+                RelmAction::<RemoveTask>::new_stateless(move |_| {
+                    sender.output(<Self as FactoryComponent>::Output::Remove(index.clone()));
+                })
+            };
+            row_actions.add_action(remove_row);
+
+            row_actions.register_for_widget(&widgets.row);
         }
     }
 }
