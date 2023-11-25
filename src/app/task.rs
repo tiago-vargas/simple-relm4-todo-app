@@ -53,7 +53,7 @@ impl FactoryComponent for TaskRow {
     }
 
     view! {
-        gtk::Box {
+        task_row = gtk::Box {
             set_orientation: gtk::Orientation::Horizontal,
             set_spacing: 8,
 
@@ -61,6 +61,18 @@ impl FactoryComponent for TaskRow {
                 set_icon_name: "drag-handle-symbolic",
                 set_margin_all: 8,
                 set_css_classes: &["flat"],
+
+                add_controller = gtk::DragSource {
+                    connect_prepare => move |_drag_source, _x_start, _y_start| {
+                        // Stub!
+                        Some(gtk::gdk::ContentProvider::for_bytes("text/plain", &gtk::glib::Bytes::from_static(crate::app::APP_ID.as_bytes())))
+                    },
+
+                    connect_begin[task_row] => move |drag_source, _s| {
+                        let p = gtk::WidgetPaintable::new(Some(&task_row));
+                        drag_source.set_icon(Some(&p), 24, 24);
+                    },
+                },
             },
 
             gtk::CheckButton {
