@@ -20,6 +20,7 @@ pub(crate) struct Task {
 #[derive(Debug)]
 pub(crate) enum TaskRowInput {
     Toggle,
+    Set(String),  // DEBUG!
 }
 
 #[derive(Debug)]
@@ -63,8 +64,9 @@ impl FactoryComponent for TaskRow {
                 set_css_classes: &["flat"],
 
                 add_controller = gtk::DragSource {
+                    set_actions: gtk::gdk::DragAction::COPY,
+
                     connect_prepare => move |_drag_source, _x_start, _y_start| {
-                        // Stub!
                         Some(gtk::gdk::ContentProvider::for_bytes("text/plain", &gtk::glib::Bytes::from_static(crate::app::APP_ID.as_bytes())))
                     },
 
@@ -76,7 +78,7 @@ impl FactoryComponent for TaskRow {
             },
 
             gtk::CheckButton {
-                set_label: Some(self.task.description.as_str()),
+                #[watch] set_label: Some(self.task.description.as_str()),
                 set_halign: gtk::Align::Start,
                 set_active: self.task.completed,
                 set_hexpand: true,
@@ -94,6 +96,16 @@ impl FactoryComponent for TaskRow {
                 set_css_classes: &["flat"],
 
                 set_menu_model: Some(&row_menu),
+            },
+
+            add_controller = gtk::DropTarget::new(gtk::glib::Type::STRING, gtk::gdk::DragAction::COPY) {
+                // Emitted on the drop site when the user drops the data onto the widget.
+                connect_drop[sender] => move |_drop_target, _dropped_value, _x, _y| {
+                    println!("Drop: {_x}, {_y}");
+                    // self.task.description = "Dropped".to_string();
+                    sender.input(Self::Input::Set("Dropped".to_string()));
+                    true
+                },
             },
         }
     }
@@ -132,6 +144,9 @@ impl FactoryComponent for TaskRow {
         match input {
             Self::Input::Toggle => {
                 self.task.completed = !self.task.completed;
+            }
+            Self::Input::Set(s) => {
+                self.task.description = s;
             }
         }
     }
