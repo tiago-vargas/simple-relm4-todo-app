@@ -30,6 +30,7 @@ pub(crate) enum TaskRowOutput {
     MoveUp(DynamicIndex),
     MoveDown(DynamicIndex),
     Remove(DynamicIndex),
+    Swap(DynamicIndex, DynamicIndex),
 }
 
 #[relm4::factory(pub(crate))]
@@ -104,11 +105,11 @@ impl FactoryComponent for TaskRow {
 
             add_controller = gtk::DropTarget::new(gtk::glib::Type::POINTER, gtk::gdk::DragAction::COPY) {
                 // Emitted on the drop site when the user drops the data onto the widget.
-                connect_drop[sender] => move |_drop_target, dropped_value, _x, _y| {
+                connect_drop[sender, index] => move |_drop_target, dropped_value, _x, _y| {
                     match dropped_value.get::<*mut ffi::c_void>() {
                         Ok(pointer) => {
-                            let i = unsafe { Box::from_raw(pointer as *mut DynamicIndex) };
-                            sender.input(Self::Input::Set("Dropped".to_string()));
+                            let dropped_index = unsafe { Box::from_raw(pointer as *mut DynamicIndex) };
+                            sender.output(Self::Output::Swap(index.clone(), *dropped_index));
                             true
                         },
                         Err(e) => {
@@ -126,6 +127,7 @@ impl FactoryComponent for TaskRow {
             Self::Output::Remove(index) => ContentInput::RemoveTask(index),
             Self::Output::MoveUp(index) => ContentInput::MoveTaskUp(index),
             Self::Output::MoveDown(index) => ContentInput::MoveTaskDown(index),
+            Self::Output::Swap(index_1, index_2) => ContentInput::Swap(index_1, index_2),
         })
     }
 

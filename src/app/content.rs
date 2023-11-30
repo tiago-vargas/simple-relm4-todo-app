@@ -16,6 +16,7 @@ pub(crate) enum ContentInput {
     MoveTaskDown(DynamicIndex),
     RestoreTasks(Vec<task::Task>),
     ClearBuffer(gtk::EntryBuffer),
+    Swap(DynamicIndex, DynamicIndex),
 }
 
 #[relm4::component(pub(crate))]
@@ -103,6 +104,10 @@ impl SimpleComponent for ContentModel {
                 }
             }
             Self::Input::ClearBuffer(buffer) => buffer.set_text(""),
+            Self::Input::Swap(index_1, index_2) => self
+                .tasks
+                .guard()
+                .swap(index_1.current_index(), index_2.current_index()),
         }
     }
 }
