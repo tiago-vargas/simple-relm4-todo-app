@@ -1,6 +1,8 @@
+use core::ffi;
+
 use super::content::ContentInput;
 
-use gtk::prelude::*;
+use gtk::{gdk, glib, prelude::*};
 use relm4::{prelude::*, factory::FactoryView};
 
 use serde::{Deserialize, Serialize};
@@ -66,13 +68,15 @@ impl FactoryComponent for TaskRow {
                 add_controller = gtk::DragSource {
                     set_actions: gtk::gdk::DragAction::COPY,
 
-                    connect_prepare => move |_drag_source, _x_start, _y_start| {
-                        Some(gtk::gdk::ContentProvider::for_bytes("text/plain", &gtk::glib::Bytes::from_static(crate::app::APP_ID.as_bytes())))
-                    },
-
                     connect_begin[task_row] => move |drag_source, _s| {
                         let p = gtk::WidgetPaintable::new(Some(&task_row));
                         drag_source.set_icon(Some(&p), 24, 24);
+                    },
+
+                    connect_prepare[index] => move |_drag_source, _x_start, _y_start| {
+                        let boxed_index = Box::new(index.clone());
+                        let raw = Box::into_raw(boxed_index) as *mut ffi::c_void;
+                        Some(gdk::ContentProvider::for_value(&raw.to_value()))
                     },
                 },
             },
@@ -98,13 +102,20 @@ impl FactoryComponent for TaskRow {
                 set_menu_model: Some(&row_menu),
             },
 
-            add_controller = gtk::DropTarget::new(gtk::glib::Type::STRING, gtk::gdk::DragAction::COPY) {
+            add_controller = gtk::DropTarget::new(gtk::glib::Type::POINTER, gtk::gdk::DragAction::COPY) {
                 // Emitted on the drop site when the user drops the data onto the widget.
-                connect_drop[sender] => move |_drop_target, _dropped_value, _x, _y| {
-                    println!("Drop: {_x}, {_y}");
-                    // self.task.description = "Dropped".to_string();
-                    sender.input(Self::Input::Set("Dropped".to_string()));
-                    true
+                connect_drop[sender] => move |_drop_target, dropped_value, _x, _y| {
+                    match dropped_value.get::<*mut ffi::c_void>() {
+                        Ok(pointer) => {
+                            let i = unsafe { Box::from_raw(pointer as *mut DynamicIndex) };
+                            sender.input(Self::Input::Set("Dropped".to_string()));
+                            true
+                        },
+                        Err(e) => {
+                            println!("Error: dropped value is not a pointer: {e}");
+                            false
+                        }
+                    }
                 },
             },
         }
