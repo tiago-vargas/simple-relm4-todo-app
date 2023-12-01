@@ -12,11 +12,11 @@ pub(crate) struct ContentModel {
 pub(crate) enum ContentInput {
     AddTask(task::Task),
     RemoveTask(DynamicIndex),
-    MoveTaskUp(DynamicIndex),
-    MoveTaskDown(DynamicIndex),
+    MoveTaskUp(usize),
+    MoveTaskDown(usize),
     RestoreTasks(Vec<task::Task>),
     ClearBuffer(gtk::EntryBuffer),
-    Swap(DynamicIndex, DynamicIndex),
+    Swap(usize, usize),
 }
 
 #[relm4::component(pub(crate))]
@@ -73,7 +73,7 @@ impl SimpleComponent for ContentModel {
         ComponentParts { model, widgets }
     }
 
-    fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
+    fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
         match message {
             Self::Input::AddTask(t) if t.description.is_empty() => (),
             Self::Input::AddTask(t) => {
@@ -83,16 +83,12 @@ impl SimpleComponent for ContentModel {
                 _ = self.tasks.guard().remove(index.current_index());
             }
             Self::Input::MoveTaskUp(index) => {
-                let index = index.current_index();
-
                 let is_at_top = index == 0;
                 if !is_at_top {
                     self.tasks.guard().move_to(index, index - 1);
                 }
             }
             Self::Input::MoveTaskDown(index) => {
-                let index = index.current_index();
-
                 let is_at_bottom = index == self.tasks.len() - 1;
                 if !is_at_bottom {
                     self.tasks.guard().move_to(index, index + 1);
@@ -104,10 +100,23 @@ impl SimpleComponent for ContentModel {
                 }
             }
             Self::Input::ClearBuffer(buffer) => buffer.set_text(""),
-            Self::Input::Swap(index_1, index_2) => self
-                .tasks
-                .guard()
-                .swap(index_1.current_index(), index_2.current_index()),
+            Self::Input::Swap(target, source) => {
+                if target == source {
+                    ()
+                } else if target > source {
+                    // Source
+                    // ...
+                    // Target
+                    sender.input(Self::Input::MoveTaskDown(source));
+                    sender.input(Self::Input::Swap(target, source + 1));
+                } else if target < source {
+                    // Target
+                    // ...
+                    // Source
+                    sender.input(Self::Input::MoveTaskUp(source));
+                    sender.input(Self::Input::Swap(target, source - 1));
+                }
+            }
         }
     }
 }

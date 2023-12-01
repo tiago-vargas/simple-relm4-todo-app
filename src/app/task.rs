@@ -150,9 +150,9 @@ impl FactoryComponent for TaskRow {
     fn forward_to_parent(output: Self::Output) -> Option<Self::ParentInput> {
         Some(match output {
             Self::Output::Remove(index) => ContentInput::RemoveTask(index),
-            Self::Output::MoveUp(index) => ContentInput::MoveTaskUp(index),
-            Self::Output::MoveDown(index) => ContentInput::MoveTaskDown(index),
-            Self::Output::Swap(index_1, index_2) => ContentInput::Swap(index_1, index_2),
+            Self::Output::MoveUp(index) => ContentInput::MoveTaskUp(index.current_index()),
+            Self::Output::MoveDown(index) => ContentInput::MoveTaskDown(index.current_index()),
+            Self::Output::Swap(index_1, index_2) => ContentInput::Swap(index_1.current_index(), index_2.current_index()),
         })
     }
 
