@@ -2,7 +2,7 @@ use core::ffi;
 
 use super::content::ContentInput;
 
-use gtk::{gdk, glib, prelude::*};
+use gtk::{gdk, prelude::*};
 use relm4::{prelude::*, factory::FactoryView};
 
 use serde::{Deserialize, Serialize};
@@ -11,6 +11,7 @@ mod task_row_actions;
 
 pub(crate) struct TaskRow {
     pub(crate) task: Task,
+    visible_child_name: &'static str,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -22,7 +23,8 @@ pub(crate) struct Task {
 #[derive(Debug)]
 pub(crate) enum TaskRowInput {
     Toggle,
-    Set(String),  // DEBUG!
+    Hide,
+    Show,
 }
 
 #[derive(Debug)]
@@ -57,51 +59,63 @@ impl FactoryComponent for TaskRow {
     }
 
     view! {
-        task_row = gtk::Box {
-            set_orientation: gtk::Orientation::Horizontal,
-            set_spacing: 8,
+        task_row = gtk::Stack {
+            add_child = &gtk::Box {
+                set_orientation: gtk::Orientation::Horizontal,
+                set_spacing: 8,
 
-            gtk::Button {
-                set_icon_name: "drag-handle-symbolic",
-                set_margin_all: 8,
-                set_css_classes: &["flat"],
+                gtk::Button {
+                    set_icon_name: "drag-handle-symbolic",
+                    set_margin_all: 8,
+                    set_css_classes: &["flat"],
 
-                add_controller = gtk::DragSource {
-                    set_actions: gtk::gdk::DragAction::COPY,
+                    add_controller = gtk::DragSource {
+                        set_actions: gtk::gdk::DragAction::COPY,
 
-                    connect_begin[task_row] => move |drag_source, _s| {
-                        let p = gtk::WidgetPaintable::new(Some(&task_row));
-                        drag_source.set_icon(Some(&p), 24, 24);
-                    },
+                        connect_begin[task_row] => move |drag_source, _s| {
+                            let p = gtk::WidgetPaintable::new(Some(&task_row));
+                            drag_source.set_icon(Some(&p), 24, 24);
+                        },
 
-                    connect_prepare[index] => move |_drag_source, _x_start, _y_start| {
-                        let boxed_index = Box::new(index.clone());
-                        let raw = Box::into_raw(boxed_index) as *mut ffi::c_void;
-                        Some(gdk::ContentProvider::for_value(&raw.to_value()))
+                        connect_prepare[index] => move |_drag_source, _x_start, _y_start| {
+                            let boxed_index = Box::new(index.clone());
+                            let raw = Box::into_raw(boxed_index) as *mut ffi::c_void;
+                            Some(gdk::ContentProvider::for_value(&raw.to_value()))
+                        },
                     },
                 },
-            },
 
-            gtk::CheckButton {
-                #[watch] set_label: Some(self.task.description.as_str()),
-                set_halign: gtk::Align::Start,
-                set_active: self.task.completed,
-                set_hexpand: true,
-                set_margin_all: 8,
+                gtk::CheckButton {
+                    #[watch] set_label: Some(self.task.description.as_str()),
+                    set_halign: gtk::Align::Start,
+                    set_active: self.task.completed,
+                    set_hexpand: true,
+                    set_margin_all: 8,
 
-                connect_toggled[sender] => move |_| {
-                    sender.input(Self::Input::Toggle)
+                    connect_toggled[sender] => move |_| {
+                        sender.input(Self::Input::Toggle)
+                    },
                 },
+
+                #[name = "menu"]
+                gtk::MenuButton {
+                    set_icon_name: "view-more-symbolic",
+                    set_margin_all: 8,
+                    set_css_classes: &["flat"],
+
+                    set_menu_model: Some(&row_menu),
+                },
+            } -> {
+                set_name: "row_content",
             },
 
-            #[name = "menu"]
-            gtk::MenuButton {
-                set_icon_name: "view-more-symbolic",
-                set_margin_all: 8,
-                set_css_classes: &["flat"],
-
-                set_menu_model: Some(&row_menu),
+            add_child = &gtk::Box {
+                // Empty; preserves size of the row
+            } -> {
+                set_name: "row_placeholder",
             },
+
+            #[watch] set_visible_child_name: self.visible_child_name,
 
             add_controller = gtk::DropTarget::new(gtk::glib::Type::POINTER, gtk::gdk::DragAction::COPY) {
                 // Emitted on the drop site when the user drops the data onto the widget.
@@ -110,6 +124,8 @@ impl FactoryComponent for TaskRow {
                         Ok(pointer) => {
                             let dropped_index = unsafe { Box::from_raw(pointer as *mut DynamicIndex) };
                             sender.output(Self::Output::Swap(index.clone(), *dropped_index));
+                            // Show it here because when it drops, it doesn't leave the target
+                            sender.input(Self::Input::Show);
                             true
                         },
                         Err(e) => {
@@ -117,6 +133,15 @@ impl FactoryComponent for TaskRow {
                             false
                         }
                     }
+                },
+
+                connect_enter[sender] => move |_d, _x, _y| {
+                    sender.input(Self::Input::Hide);
+                    gdk::DragAction::COPY
+                },
+
+                connect_leave[sender] => move |_| {
+                    sender.input(Self::Input::Show);
                 },
             },
         }
@@ -136,7 +161,7 @@ impl FactoryComponent for TaskRow {
         _index: &DynamicIndex,
         _sender: FactorySender<Self>,
     ) -> Self {
-        Self { task }
+        Self { task, visible_child_name: "row_content" }
     }
 
     fn init_widgets(
@@ -158,8 +183,11 @@ impl FactoryComponent for TaskRow {
             Self::Input::Toggle => {
                 self.task.completed = !self.task.completed;
             }
-            Self::Input::Set(s) => {
-                self.task.description = s;
+            Self::Input::Hide => {
+                self.visible_child_name = "row_placeholder";
+            }
+            Self::Input::Show => {
+                self.visible_child_name = "row_content";
             }
         }
     }
