@@ -1,9 +1,3 @@
-#[derive(Debug)]
-pub(crate) enum WindowSize {
-    Size(i32, i32),
-    Maximized,
-}
-
 pub(crate) enum Settings {
     WindowWidth,
     WindowHeight,
