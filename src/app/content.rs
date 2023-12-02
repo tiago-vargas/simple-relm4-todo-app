@@ -12,6 +12,8 @@ pub(crate) struct ContentModel {
 pub(crate) enum ContentInput {
     AddTask(task::Task),
     RemoveTask(DynamicIndex),
+    MoveTaskUp(DynamicIndex),
+    MoveTaskDown(DynamicIndex),
     RestoreTasks(Vec<task::Task>),
     ClearBuffer(gtk::EntryBuffer),
 }
@@ -78,6 +80,22 @@ impl SimpleComponent for ContentModel {
             }
             Self::Input::RemoveTask(index) => {
                 _ = self.tasks.guard().remove(index.current_index());
+            }
+            Self::Input::MoveTaskUp(index) => {
+                let index = index.current_index();
+
+                let is_at_top = index == 0;
+                if !is_at_top {
+                    self.tasks.guard().move_to(index, index - 1);
+                }
+            }
+            Self::Input::MoveTaskDown(index) => {
+                let index = index.current_index();
+
+                let is_at_bottom = index == self.tasks.len() - 1;
+                if !is_at_bottom {
+                    self.tasks.guard().move_to(index, index + 1);
+                }
             }
             Self::Input::RestoreTasks(tasks) => {
                 for t in tasks {

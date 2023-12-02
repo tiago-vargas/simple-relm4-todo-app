@@ -24,6 +24,8 @@ pub(crate) enum TaskRowInput {
 
 #[derive(Debug)]
 pub(crate) enum TaskRowOutput {
+    MoveUp(DynamicIndex),
+    MoveDown(DynamicIndex),
     Remove(DynamicIndex),
 }
 
@@ -40,6 +42,8 @@ impl FactoryComponent for TaskRow {
 
     menu! {
         row_menu: {
+            "Move Up" => task_row_actions::MoveRowUp,
+            "Move Down" => task_row_actions::MoveRowDown,
             "Remove" => task_row_actions::RemoveRow,
         }
     }
@@ -75,6 +79,8 @@ impl FactoryComponent for TaskRow {
     fn forward_to_parent(output: Self::Output) -> Option<Self::ParentInput> {
         Some(match output {
             Self::Output::Remove(index) => ContentInput::RemoveTask(index),
+            Self::Output::MoveUp(index) => ContentInput::MoveTaskUp(index),
+            Self::Output::MoveDown(index) => ContentInput::MoveTaskDown(index),
         })
     }
 
