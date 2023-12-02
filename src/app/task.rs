@@ -42,9 +42,13 @@ impl FactoryComponent for TaskRow {
 
     menu! {
         row_menu: {
-            "Move Up" => task_row_actions::MoveRowUp,
-            "Move Down" => task_row_actions::MoveRowDown,
-            "Remove" => task_row_actions::RemoveRow,
+            section! {
+                "Move Up" => task_row_actions::MoveRowUp,
+                "Move Down" => task_row_actions::MoveRowDown,
+            },
+            section! {
+                "Remove" => task_row_actions::RemoveRow,
+            },
         }
     }
 
