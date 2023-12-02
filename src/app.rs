@@ -31,9 +31,6 @@ impl SimpleComponent for AppModel {
     view! {
         main_window = adw::ApplicationWindow {
             set_title: Some("To-Do"),
-            set_default_width: settings.int(settings::Settings::WindowWidth.as_str()),
-            set_default_height: settings.int(settings::Settings::WindowHeight.as_str()),
-            set_maximized: settings.boolean(settings::Settings::WindowIsMaximized.as_str()),
 
             gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
@@ -60,14 +57,14 @@ impl SimpleComponent for AppModel {
         window: &Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let settings = gtk::gio::Settings::new(APP_ID);
-
         let content = content::ContentModel::builder()
             .launch(())
             .detach();
         let model = AppModel { content };
 
         let widgets = view_output!();
+
+        Self::load_window_state(&widgets);
 
         ComponentParts { model, widgets }
     }
@@ -126,5 +123,19 @@ impl AppModel {
             settings::Settings::WindowIsMaximized.as_str(),
             widgets.main_window.is_maximized(),
         );
+    }
+
+    fn load_window_state(widgets: &<Self as SimpleComponent>::Widgets) {
+        let settings = gtk::gio::Settings::new(APP_ID);
+
+        let width = settings.int(settings::Settings::WindowWidth.as_str());
+        let height = settings.int(settings::Settings::WindowHeight.as_str());
+
+        widgets.main_window.set_default_size(width, height);
+
+        let is_maximized = settings.boolean(settings::Settings::WindowIsMaximized.as_str());
+        if is_maximized {
+            widgets.main_window.maximize();
+        }
     }
 }
