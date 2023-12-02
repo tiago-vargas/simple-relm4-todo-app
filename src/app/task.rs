@@ -1,9 +1,11 @@
 use super::content::ContentInput;
 
 use gtk::prelude::*;
-use relm4::prelude::*;
+use relm4::{prelude::*, factory::FactoryView};
 
 use serde::{Deserialize, Serialize};
+
+mod task_row_actions;
 
 pub(crate) struct TaskRow {
     pub(crate) task: Task,
@@ -22,6 +24,8 @@ pub(crate) enum TaskRowInput {
 
 #[derive(Debug)]
 pub(crate) enum TaskRowOutput {
+    MoveUp(DynamicIndex),
+    MoveDown(DynamicIndex),
     Remove(DynamicIndex),
 }
 
@@ -35,6 +39,18 @@ impl FactoryComponent for TaskRow {
     type CommandOutput = ();
     type ParentInput = ContentInput;
     type ParentWidget = gtk::ListBox;
+
+    menu! {
+        row_menu: {
+            section! {
+                "Move Up" => task_row_actions::MoveRowUp,
+                "Move Down" => task_row_actions::MoveRowDown,
+            },
+            section! {
+                "Remove" => task_row_actions::RemoveRow,
+            },
+        }
+    }
 
     view! {
         gtk::Box {
@@ -53,14 +69,13 @@ impl FactoryComponent for TaskRow {
                 },
             },
 
-            gtk::Button {
-                set_icon_name: "edit-delete-symbolic",
-                set_css_classes: &["destructive-action"],
+            #[name = "menu"]
+            gtk::MenuButton {
+                set_icon_name: "view-more-symbolic",
                 set_margin_all: 8,
+                set_css_classes: &["flat"],
 
-                connect_clicked[sender, index] => move |_| {
-                    sender.output(Self::Output::Remove(index.clone()));
-                },
+                set_menu_model: Some(&row_menu),
             },
         }
     }
@@ -68,6 +83,8 @@ impl FactoryComponent for TaskRow {
     fn forward_to_parent(output: Self::Output) -> Option<Self::ParentInput> {
         Some(match output {
             Self::Output::Remove(index) => ContentInput::RemoveTask(index),
+            Self::Output::MoveUp(index) => ContentInput::MoveTaskUp(index),
+            Self::Output::MoveDown(index) => ContentInput::MoveTaskDown(index),
         })
     }
 
@@ -77,6 +94,20 @@ impl FactoryComponent for TaskRow {
         _sender: FactorySender<Self>,
     ) -> Self {
         Self { task }
+    }
+
+    fn init_widgets(
+        &mut self,
+        index: &Self::Index,
+        root: &Self::Root,
+        _returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
+        sender: FactorySender<Self>,
+    ) -> Self::Widgets {
+        let widgets = view_output!();
+
+        Self::create_actions(index, &widgets, &sender);
+
+        widgets
     }
 
     fn update(&mut self, input: Self::Input, _sender: FactorySender<Self>) {
