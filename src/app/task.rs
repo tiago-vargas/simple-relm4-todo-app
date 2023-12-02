@@ -20,6 +20,7 @@ pub(crate) struct Task {
 #[derive(Debug)]
 pub(crate) enum TaskRowInput {
     Toggle,
+    UpdateDescription(String),
 }
 
 #[derive(Debug)]
@@ -58,7 +59,6 @@ impl FactoryComponent for TaskRow {
             set_spacing: 8,
 
             gtk::CheckButton {
-                set_label: Some(self.task.description.as_str()),
                 set_halign: gtk::Align::Start,
                 set_active: self.task.completed,
                 set_hexpand: true,
@@ -69,7 +69,18 @@ impl FactoryComponent for TaskRow {
                 },
             },
 
-            #[name = "menu"]
+            gtk::EditableLabel {
+                set_text: self.task.description.as_str(),
+                set_halign: gtk::Align::Start,
+                set_hexpand: true,
+                set_margin_all: 8,
+
+                connect_changed[sender] => move |this| {
+                    sender.input(Self::Input::UpdateDescription(String::from(this.text())));
+                },
+            },
+
+            #[name(menu)]
             gtk::MenuButton {
                 set_icon_name: "view-more-symbolic",
                 set_margin_all: 8,
@@ -114,6 +125,9 @@ impl FactoryComponent for TaskRow {
         match input {
             Self::Input::Toggle => {
                 self.task.completed = !self.task.completed;
+            }
+            Self::Input::UpdateDescription(description) => {
+                self.task.description = description;
             }
         }
     }
