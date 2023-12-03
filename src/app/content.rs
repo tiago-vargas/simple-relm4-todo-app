@@ -61,7 +61,7 @@ impl SimpleComponent for ContentModel {
         match message {
             Self::Input::AddTask(t) if t.description.is_empty() => (),
             Self::Input::AddTask(t) => {
-                _ = self.tasks.guard().push_front(t);
+                _ = self.tasks.guard().push_back(t);
             }
             Self::Input::RemoveTask(index) => {
                 _ = self.tasks.guard().remove(index.current_index());
