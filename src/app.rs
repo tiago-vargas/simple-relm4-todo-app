@@ -36,12 +36,13 @@ impl SimpleComponent for AppModel {
 
             adw::ToolbarView {
                 add_top_bar = &adw::HeaderBar,
-                add_top_bar = &gtk::Entry {
+
+                #[wrap(Some)]
+                set_content = model.content.widget(),
+
+                add_bottom_bar = &gtk::Entry {
                     set_placeholder_text: Some("Enter a Task..."),
-                    set_margin_start: 8,
-                    set_margin_end: 8,
-                    set_margin_top: 4,
-                    set_margin_bottom: 4,
+                    set_margin_all: 8,
 
                     connect_activate[sender] => move |entry| {
                         let task = task::Task {
@@ -52,9 +53,6 @@ impl SimpleComponent for AppModel {
                         sender.input(Self::Input::ClearBuffer(entry.buffer()));
                     },
                 },
-
-                #[wrap(Some)]
-                set_content = model.content.widget(),
             },
 
             connect_show[sender] => move |_| {
