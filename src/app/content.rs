@@ -15,7 +15,6 @@ pub(crate) enum ContentInput {
     MoveTaskUp(DynamicIndex),
     MoveTaskDown(DynamicIndex),
     RestoreTasks(Vec<task::Task>),
-    ClearBuffer(gtk::EntryBuffer),
 }
 
 #[relm4::component(pub(crate))]
@@ -32,20 +31,6 @@ impl SimpleComponent for ContentModel {
             gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
                 set_margin_all: 12,
-                set_spacing: 12,
-
-                gtk::Entry {
-                    set_placeholder_text: Some("Enter a Task..."),
-
-                    connect_activate[sender] => move |entry| {
-                        let task = task::Task {
-                            description: entry.text().to_string(),
-                            completed: false,
-                        };
-                        sender.input(Self::Input::AddTask(task));
-                        sender.input(Self::Input::ClearBuffer(entry.buffer()));
-                    },
-                },
 
                 #[local_ref]
                 task_list_box -> gtk::ListBox {
@@ -54,8 +39,8 @@ impl SimpleComponent for ContentModel {
                     #[watch]
                     set_visible: !model.tasks.is_empty(),
                 },
-            }
-        },
+            },
+        }
     }
 
     fn init(
@@ -102,7 +87,6 @@ impl SimpleComponent for ContentModel {
                     _ = self.tasks.guard().push_back(t);
                 }
             }
-            Self::Input::ClearBuffer(buffer) => buffer.set_text(""),
         }
     }
 }

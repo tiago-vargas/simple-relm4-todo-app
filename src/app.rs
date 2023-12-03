@@ -18,6 +18,8 @@ pub(crate) struct AppModel {
 pub(crate) enum AppInput {
     SaveTasks,
     LoadTasks,
+    AddTask(task::Task),
+    ClearBuffer(gtk::EntryBuffer),
 }
 
 
@@ -32,12 +34,27 @@ impl SimpleComponent for AppModel {
         main_window = adw::ApplicationWindow {
             set_title: Some("To-Do"),
 
-            gtk::Box {
-                set_orientation: gtk::Orientation::Vertical,
+            adw::ToolbarView {
+                add_top_bar = &adw::HeaderBar,
+                add_top_bar = &gtk::Entry {
+                    set_placeholder_text: Some("Enter a Task..."),
+                    set_margin_start: 8,
+                    set_margin_end: 8,
+                    set_margin_top: 4,
+                    set_margin_bottom: 4,
 
-                adw::HeaderBar,
+                    connect_activate[sender] => move |entry| {
+                        let task = task::Task {
+                            description: entry.text().to_string(),
+                            completed: false,
+                        };
+                        sender.input(Self::Input::AddTask(task));
+                        sender.input(Self::Input::ClearBuffer(entry.buffer()));
+                    },
+                },
 
-                model.content.widget(),
+                #[wrap(Some)]
+                set_content = model.content.widget(),
             },
 
             connect_show[sender] => move |_| {
@@ -103,6 +120,11 @@ impl SimpleComponent for AppModel {
                         .expect("Could not send message to child component.");
                 }
             }
+            Self::Input::AddTask(task) => {
+                self.content.sender().send(content::ContentInput::AddTask(task))
+                    .expect("Could not send message to child component.");
+            }
+            Self::Input::ClearBuffer(buffer) => buffer.set_text(""),
         }
     }
 
