@@ -912,6 +912,7 @@ dependencies = [
 name = "simple-relm4-todo"
 version = "0.1.0"
 dependencies = [
+ "libadwaita",
  "relm4",
  "relm4-components",
  "serde",
