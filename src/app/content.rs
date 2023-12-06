@@ -33,11 +33,25 @@ impl SimpleComponent for ContentModel {
                 set_margin_all: 12,
 
                 #[local_ref]
-                all_tasks_list_box -> gtk::ListBox {
+                completed_tasks_list_box -> gtk::ListBox {
                     set_css_classes: &["boxed-list"],
 
                     #[watch]
-                    set_visible: !model.tasks.is_empty(),
+                    set_visible: !model.tasks.iter()
+                        .filter(|row| row.task.completed)
+                        .collect::<Vec<&task::TaskRow>>()
+                        .is_empty(),
+                },
+
+                #[local_ref]
+                pending_list_box -> gtk::ListBox {
+                    set_css_classes: &["boxed-list"],
+
+                    #[watch]
+                    set_visible: !model.tasks.iter()
+                        .filter(|row| !row.task.completed)
+                        .collect::<Vec<&task::TaskRow>>()
+                        .is_empty(),
                 },
             },
         }
@@ -51,7 +65,8 @@ impl SimpleComponent for ContentModel {
         let tasks = FactoryVecDeque::new(gtk::ListBox::default(), sender.input_sender());
         let model = ContentModel { tasks };
 
-        let all_tasks_list_box = model.tasks.widget();
+        let completed_tasks_list_box = model.tasks.widget();
+        let pending_list_box = model.tasks.widget();
         let widgets = view_output!();
 
         ComponentParts { model, widgets }
