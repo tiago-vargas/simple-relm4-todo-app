@@ -29,6 +29,5 @@
 			],
 			"preLaunchTask": "rust: cargo build"
 		}
-
 	]
 }

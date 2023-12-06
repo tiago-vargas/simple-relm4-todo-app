@@ -2,21 +2,45 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"label": "rust: cargo build",
 			"type": "cargo",
 			"command": "build",
 			"problemMatcher": [
 				"$rustc"
 			],
 			"group": "build",
-			"label": "rust: cargo build",
 			"presentation": {
 				"echo": true,
-				"reveal": "always",
+				"reveal": "silent",
+				"revealProblems": "onProblem",
 				"focus": false,
-				"panel": "shared",
+				"panel": "dedicated",
 				"showReuseMessage": true,
 				"clear": true,
-			}
+			},
+			"dependsOn": [
+				"Compile schemas"
+			]
+		},
+		{
+			"label": "Compile schemas",
+			"type": "shell",
+			"command": "glib-compile-schemas",
+			"args": [
+				"~/.local/share/glib-2.0/schemas/"
+			],
+			"dependsOn": [
+				"Copy schema"
+			]
+		},
+		{
+			"label": "Copy schema",
+			"type": "shell",
+			"command": "cp",
+			"args": [
+				"data/com.github.tiago_vargas.simple_relm4_todo.gschema.xml",
+				"~/.local/share/glib-2.0/schemas/"
+			],
 		}
 	]
 }
